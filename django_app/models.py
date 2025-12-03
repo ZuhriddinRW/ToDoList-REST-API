@@ -1,4 +1,5 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.conf import settings
 
@@ -27,21 +28,22 @@ class UserManager ( BaseUserManager ) :
         return self.create_user ( username, email, password, **extra_fields )
 
 
-class User ( AbstractBaseUser ) :
+class User ( AbstractBaseUser, PermissionsMixin ) :
     username = models.CharField ( max_length=150, unique=True )
     email = models.EmailField ( blank=True, null=True )
     first_name = models.CharField ( max_length=150, blank=True )
     last_name = models.CharField ( max_length=150, blank=True )
-    phone_number = models.CharField ( max_length=15, blank=True, null=True )
+    phone_number = models.CharField ( unique=True, max_length=15, blank=True, null=True )
 
     is_active = models.BooleanField ( default=True )
     is_staff = models.BooleanField ( default=False )
     is_superuser = models.BooleanField ( default=True )
+    is_admin = models.BooleanField ( default=True )
 
     objects = UserManager ()
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['username']
 
     def __str__(self) :
         return self.username
@@ -51,6 +53,16 @@ class User ( AbstractBaseUser ) :
 
     def has_module_perms(self, app_label) :
         return self.is_superuser or self.is_staff
+
+
+class OTPVerification ( models.Model ) :
+    phone_number = models.CharField ( max_length=15, blank=True, null=True )
+    otp_code = models.CharField ( max_length=6 )
+    created_at = models.DateTimeField ( auto_now_add=True )
+    is_verified = models.BooleanField ( default=False )
+
+    class Meta :
+        ordering = ['-created_at']
 
 
 class TodoItem ( models.Model ) :

@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import TodoItem, User
 
@@ -29,3 +30,41 @@ class TodoItemSerializer ( serializers.ModelSerializer ) :
         if not value.strip () :
             raise serializers.ValidationError ( "Sarlavha bo'sh bo'lishi mumkin emas" )
         return value
+
+
+class PhoneNumberSerializer ( serializers.Serializer ) :
+    phone_number = serializers.CharField ( max_length=15, required=True )
+
+
+class OTPVerifySerializer ( serializers.Serializer ) :
+    phone_number = serializers.CharField ( max_length=15, required=True )
+    otp_code = serializers.CharField ( max_length=6, required=True )
+
+
+class LoginSerializer ( serializers.Serializer ) :
+    phone_number = serializers.CharField ()
+    password = serializers.CharField ( write_only=True )
+
+    def validate(self, data) :
+        phone_number = data.get ( 'phone_number' )
+        password = data.get ( 'password' )
+
+        if phone_number and password :
+            user = authenticate ( phone_number=phone_number, password=password )
+
+            if not user :
+                raise serializers.ValidationError (
+                    'Phone number or password is invalid'
+                )
+
+            if not user.is_active :
+                raise serializers.ValidationError (
+                    'User account is disabled'
+                )
+
+            data['user'] = user
+            return data
+        else :
+            raise serializers.ValidationError (
+                'Must include "phone number" and "password"'
+            )
