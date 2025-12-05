@@ -1,5 +1,7 @@
 import random
 from django.contrib.auth import get_user_model
+from django.core import cache
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
@@ -155,3 +157,17 @@ class LoginUser ( APIView ) :
         token = get_tokens_for_user ( user )
 
         return Response ( data=token, status=status.HTTP_200_OK )
+
+class UserRegister(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(request_body=UserSerializer)
+    def post(self,request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            phone = serializer.validated_data['phone_number']
+            serializer.save(is_active=True)
+            return Response({'status':True,'massage': "Registerdan otildi"},status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'massage':serializer.errors},status=status.HTTP_400_BAD_REQUEST)

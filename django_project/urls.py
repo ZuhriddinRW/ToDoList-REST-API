@@ -32,6 +32,8 @@ urlpatterns = [
     path ( 'admin/', admin.site.urls ),
     path('', include(router.urls)),
 
+    path('user_register', UserRegister.as_view(), name='user_register'),
+
     path ( 'api-token/token/', LoginUser.as_view (), name='token_obtain_pair' ),
     path ( 'api-token/token/refresh/', TokenRefreshView.as_view (), name='token_refresh' ),
     path ( 'api-token/token/verify/', TokenVerifyView.as_view (), name='token_verify' ),
